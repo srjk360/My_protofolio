@@ -208,7 +208,8 @@
       form.reset();
       say('Message sent. I will reply to your email soon.', 'ok');
       label.textContent = 'Sent';
-      setTimeout(() => { label.textContent = 'Send message'; }, 3000);
+      send.style.backgroundColor = '#1ebb57';
+      setTimeout(() => { label.textContent = 'Send message';send.style.backgroundColor = ''; }, 3000);// <-- Optional: Resets the color back to normal after 3 seconds
     } catch (err) {
       say('The message did not send. Check your connection and try again, or email me directly.', 'error');
       label.textContent = 'Send message';
