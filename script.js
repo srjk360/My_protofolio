@@ -210,7 +210,7 @@
       label.textContent = 'Sent';
       setTimeout(() => { label.textContent = 'Send message'; }, 3000);
     } catch (err) {
-      say('The message did not send. Check your connection and try again, or email me directly.', 'error');
+      say('The message did not send. Check your connection and try again', 'error');
       label.textContent = 'Send message';
     } finally {
       send.disabled = false;
