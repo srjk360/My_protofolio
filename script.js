@@ -60,7 +60,7 @@
   const phrases = [
     'mobile apps with Flutter',
     'embedded systems in C',
-    'websites with HTML and CSS',
+    'full-stack web apps',
     'projects in Python',
   ];
   if (!reduce) {

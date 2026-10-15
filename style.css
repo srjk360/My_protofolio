@@ -171,6 +171,13 @@ h1, h2, h3, p { margin: 0; }
 }
 .stat__label { color: var(--muted); }
 
+/* ============ Achievements ============ */
+.section--tight { margin-top: -3rem; padding-block: 0 clamp(2rem, 5vw, 3.5rem); }
+.wins { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.wins li { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.4rem; border: 1px solid var(--line); border-radius: 16px; background: var(--ink-2); }
+.wins__num { font: 300 2.4rem/1 var(--display); color: var(--flare); font-variant-numeric: tabular-nums; }
+.wins__text { color: var(--muted); }
+
 /* ============ Skills ============ */
 .marquees { display: grid; gap: 1rem; margin: clamp(2.5rem, 6vw, 4rem) 0 0; }
 .marquee {
