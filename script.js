@@ -312,7 +312,7 @@
       await showThanks(name, email);
     } catch (err) {
       setState('error');
-      say("It didn't send. Check your connection and try again, or email me directly.", 'error');
+      say("It didn't send. Check your connection and try again.", 'error');
       await wait(2600);
       setState('');
     } finally {
