@@ -442,3 +442,143 @@ h1, h2, h3, p { margin: 0; }
   -webkit-text-fill-color: var(--text);
   box-shadow: 0 0 0 1000px var(--ink) inset;
 }
+
+/* ============ Menu and heading icons ============ */
+.nav__menu a { display: inline-flex; align-items: center; gap: .5rem; }
+.nav__menu a svg { width: 17px; height: 17px; flex: none; transition: transform .35s var(--ease), color .3s; }
+.nav__menu a:hover svg { transform: translateY(-2px); }
+.nav__menu a.is-active svg { color: var(--flare); }
+
+
+/* Phone menu: Apple-style glass card */
+/* ============ Phone menu: pill button + water-drop card ============ */
+@media (max-width: 760px) {
+
+  /* ---- the pill ---- */
+  .nav__toggle {
+    display: inline-flex; align-items: center; gap: .6rem;
+    width: auto; height: 42px; padding: 0 1.05rem 0 .9rem;
+    border-radius: 999px; background: rgba(33, 38, 80, .85); border: 1px solid var(--line);
+    color: var(--text); font: 600 .95rem var(--body);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), background .3s, border-color .3s;
+  }
+  .nav__toggle:active { transform: scale(.9); transition-duration: .12s; }   /* squeeze, then springs back */
+  .nav__toggle[aria-expanded="true"] { background: rgba(124, 140, 255, .22); border-color: rgba(124, 140, 255, .5); }
+
+  .pill__ic { position: relative; display: block; width: 14px; height: 10px; flex: none; }
+  .pill__ic b {
+    position: absolute; left: 0; height: 2px; border-radius: 2px; background: currentColor;
+    transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), width .3s var(--ease), top .3s var(--ease);
+  }
+  .pill__ic b:nth-child(1) { top: 1px; width: 14px; }
+  .pill__ic b:nth-child(2) { top: 7px; width: 9px; }
+  .nav__toggle[aria-expanded="true"] .pill__ic b:nth-child(1) { top: 4px; width: 14px; transform: rotate(45deg); }
+  .nav__toggle[aria-expanded="true"] .pill__ic b:nth-child(2) { top: 4px; width: 14px; transform: rotate(-45deg); }
+
+  .pill__txt { position: relative; display: block; width: 3.2em; height: 1.35em; overflow: hidden; font-style: normal; }
+  .pill__txt b { position: absolute; inset: 0; font-weight: 600; line-height: 1.35em; transition: transform .55s var(--ease), opacity .3s; }
+  .pill__txt b:nth-child(2) { transform: translateY(110%); opacity: 0; }
+  .nav__toggle[aria-expanded="true"] .pill__txt b:nth-child(1) { transform: translateY(-110%); opacity: 0; }
+  .nav__toggle[aria-expanded="true"] .pill__txt b:nth-child(2) { transform: none; opacity: 1; }
+
+  /* ---- soft dim behind the card ---- */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none;
+    background: rgba(5, 7, 20, .45); opacity: 0; transition: opacity .4s var(--ease);
+  }
+  body.menu-open::after { opacity: 1; }
+
+  /* ---- the card (closed = quick shrink back into the pill, no bounce) ---- */
+  .nav__menu {
+    position: fixed; inset: auto; top: 4.3rem; right: var(--gutter);
+    width: min(260px, calc(100vw - 2.5rem));
+    padding: .5rem; gap: .1rem;
+    flex-direction: column; justify-content: flex-start;
+    background: rgba(28, 32, 66, .86);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, .09); border-radius: 22px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06);
+    clip-path: none; visibility: hidden; opacity: 0;
+    transform: translate3d(0, -12px, 0) scale(.3);
+    transform-origin: calc(100% - 52px) 0;                 /* the drop comes from the pill */
+    transition: opacity .22s ease, transform .3s cubic-bezier(.5, 0, .75, 0), visibility 0s .3s;
+    will-change: transform, opacity;
+  }
+
+  /* ---- open = the water drop: falls, lands (squash), bounces, settles ---- */
+  .nav__menu.is-open {
+    clip-path: none; visibility: visible; opacity: 1; transform: none;
+    transition: visibility 0s;
+    animation: drop .95s cubic-bezier(.3, .7, .3, 1) backwards;
+  }
+  @keyframes drop {
+    0%   { opacity: 0; transform: translate3d(0, -12px, 0) scale(.3, .3); animation-timing-function: cubic-bezier(.3, 0, .6, 1); }
+    22%  { opacity: 1; transform: translate3d(0, 6px, 0) scale(.82, 1.1);  animation-timing-function: ease-out; }  /* falling: tall + narrow */
+    42%  { transform: translate3d(0, 0, 0) scale(1.07, .92);               animation-timing-function: ease-in-out; } /* landing: wide + flat */
+    62%  { transform: scale(.98, 1.03); }                                                                          /* rebound */
+    80%  { transform: scale(1.01, .99); }
+    100% { opacity: 1; transform: none; }
+  }
+
+  /* ---- links pop in one by one while the card is still wobbling ---- */
+  .nav__menu a {
+    padding: .8rem .9rem; border-radius: 14px;
+    font: 500 1.02rem var(--body); color: var(--muted);
+    opacity: 0; transform: translate3d(0, 12px, 0) scale(.96);
+    transition: opacity .2s ease, transform .2s ease, background .25s, color .25s;
+  }
+  .nav__menu.is-open a {
+    opacity: 1; transform: none;
+    transition:
+      opacity .4s var(--ease) calc(var(--i, 0) * 55ms + 170ms),
+      transform .7s cubic-bezier(.34, 1.56, .64, 1) calc(var(--i, 0) * 55ms + 170ms),
+      background .25s, color .25s;
+  }
+  .nav__menu a:hover, .nav__menu a.is-active { background: rgba(124, 140, 255, .16); color: var(--text); }
+  .nav__menu a::after { display: none; }
+  .nav__menu a svg { width: 20px; height: 20px; }
+}
+
+/* ============ Buttons: squeeze + spring bounce (same feel as the menu pill) ============ */
+.btn {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), background .3s, color .3s, border-color .3s, box-shadow .3s;
+  will-change: transform;
+}
+@media (hover: hover) {
+  .btn:not(:disabled):hover { transform: translateY(-3px) scale(1.03); }
+}
+.btn:not(:disabled):active { transform: scale(.92); transition-duration: .12s; }
+
+
+/* ============ Thank-you card: water-drop landing + spring pop ============ */
+.thanks { transform-origin: 50% 0; transition: opacity .3s var(--ease); }
+
+/* the card falls in, lands (squash), bounces and settles */
+.thanks.is-in { animation: thanks-drop 1s cubic-bezier(.3, .7, .3, 1) backwards; }
+@keyframes thanks-drop {
+  0%   { opacity: 0; transform: translate3d(0, -26px, 0) scale(.88, .88); animation-timing-function: cubic-bezier(.3, 0, .6, 1); }
+  24%  { opacity: 1; transform: translate3d(0, 6px, 0) scale(.97, 1.04);  animation-timing-function: ease-out; }
+  44%  { transform: translate3d(0, 0, 0) scale(1.035, .965);              animation-timing-function: ease-in-out; }
+  64%  { transform: scale(.99, 1.012); }
+  82%  { transform: scale(1.004, .998); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* the tick circle pops with a spring, then draws itself after the card lands */
+.thanks.is-in .thanks__mark { animation: thanks-pop .8s .22s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes thanks-pop { from { transform: scale(.3); } to { transform: scale(1); } }
+.thanks.is-in .thanks__ring { animation-delay: .35s; }
+.thanks.is-in .thanks__tick { animation-delay: .8s; }
+
+/* title, text and button spring up one after another */
+.thanks > .thanks__title, .thanks > .thanks__text { transition: none; }
+.thanks > .btn { transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), background .3s, color .3s, border-color .3s; }
+.thanks.is-in > .thanks__title,
+.thanks.is-in > .thanks__text,
+.thanks.is-in > .btn { transition-delay: 0s; animation: thanks-rise .7s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+.thanks.is-in > .thanks__title { animation-delay: .45s; }
+.thanks.is-in > .thanks__text  { animation-delay: .53s; }
+.thanks.is-in > .btn           { animation-delay: .61s; }
+@keyframes thanks-rise { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.96); } to { opacity: 1; transform: none; } }

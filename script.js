@@ -97,6 +97,24 @@
   });
   $$('.marquee').forEach((m) => marqueeWatch.observe(m));
 
+    /* ---------- Icons for the menu and section headings ---------- */
+  const ICONS = {
+    about: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    skills: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+    projects: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    journey: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+    contact: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  };
+  const icon = (id) =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[id]}</svg>`;
+
+  $$('.nav__menu a').forEach((a, i) => {
+    const id = a.getAttribute('href').slice(1);
+    a.style.setProperty('--i', i);
+    if (ICONS[id]) a.insertAdjacentHTML('afterbegin', icon(id));
+  });
+
+
   /* ---------- Scroll reveals ---------- */
   const reveal = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
@@ -170,7 +188,10 @@
   };
   toggle.addEventListener('click', () => setMenu(!menu.classList.contains('is-open')));
   links.forEach((a) => a.addEventListener('click', () => setMenu(false)));
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+    document.addEventListener('click', (e) => {
+    if (menu.classList.contains('is-open') && !menu.contains(e.target) && !toggle.contains(e.target)) setMenu(false);
+  });
+  addEventListener('scroll', () => { if (menu.classList.contains('is-open')) setMenu(false); }, { passive: true });
 
    /* ---------- Contact form (Formspree) ---------- */
   const form = $('#form');
