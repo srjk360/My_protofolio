@@ -421,3 +421,24 @@ h1, h2, h3, p { margin: 0; }
 .thanks.is-in > .thanks__text { opacity: 1; transform: none; transition-delay: .45s; }
 .thanks.is-in > .btn { opacity: 1; transform: none; transition-delay: .55s; }
 .form .thanks .btn { justify-self: center; margin-top: .4rem; }
+
+/* Dark form fields, including browser autofill */
+.field input, .field textarea { color-scheme: dark; }
+
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus,
+.field textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--ink) inset;
+  box-shadow: 0 0 0 1000px var(--ink) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Firefox uses a different name, so it needs its own rule */
+.field input:autofill,
+.field textarea:autofill {
+  -webkit-text-fill-color: var(--text);
+  box-shadow: 0 0 0 1000px var(--ink) inset;
+}
