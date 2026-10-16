@@ -172,48 +172,153 @@
   links.forEach((a) => a.addEventListener('click', () => setMenu(false)));
   addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
 
-  /* ---------- Contact form (Formspree) ---------- */
+   /* ---------- Contact form (Formspree) ---------- */
   const form = $('#form');
-  const status = $('#status');
   const send = $('#send');
-  const label = $('.btn__label', send);
+  const status = $('#status');
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const wait = (ms) => (reduce ? Promise.resolve() : sleep(ms));
+  const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const say = (msg, type) => {
     status.textContent = msg;
-    status.className = `form__status is-${type}`;
+    status.className = type ? `form__status is-${type}` : 'form__status';
   };
 
+  /* Button state layers: sending, done, error (your own button content is left alone) */
+  const layer = (name, html) => {
+    const el = document.createElement('span');
+    el.className = `btn__state btn__state--${name}`;
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = html;
+    send.append(el);
+  };
+  layer('sending', '<i class="spin"></i><span>Sending</span>');
+  layer('done', '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Sent</span>');
+  layer('error', '<span>Try again</span>');
+  const setState = (s) => { if (s) send.dataset.state = s; else delete send.dataset.state; };
+
+  /* Field errors */
+  const fields = $$('.field', form);
+  const controlOf = (f) => f.querySelector('input, textarea');
+  const clearInvalid = (f) => { f.classList.remove('is-invalid'); controlOf(f).removeAttribute('aria-invalid'); };
+  fields.forEach((f) => {
+    const control = controlOf(f);
+    const msg = document.createElement('p');
+    msg.className = 'field__error';
+    msg.id = `${control.id}-error`;
+    f.append(msg);
+    control.setAttribute('aria-describedby', msg.id);
+    control.addEventListener('input', () => clearInvalid(f));
+  });
+  const fieldOf = (n) => form.elements[n].closest('.field');
+  const setInvalid = (n, text) => {
+    const f = fieldOf(n);
+    $('.field__error', f).textContent = text;
+    f.classList.add('is-invalid');
+    controlOf(f).setAttribute('aria-invalid', 'true');
+    if (!reduce) {
+      f.animate(
+        [0, -8, 7, -5, 3, 0].map((x) => ({ transform: `translateX(${x}px)` })),
+        { duration: 420, easing: 'cubic-bezier(.36,.07,.19,.97)' }
+      );
+    }
+  };
+  const val = (n) => String(form.elements[n].value || '').trim();
+  const check = () => {
+    const out = [];
+    if (!val('name')) out.push(['name', 'Enter your name.']);
+    if (!val('email')) out.push(['email', 'Enter your email.']);
+    else if (!/^\S+@\S+\.\S+$/.test(val('email'))) out.push(['email', 'Enter a valid email, like name@example.com.']);
+    if (!val('message')) out.push(['message', 'Write a message.']);
+    return out;
+  };
+
+  /* Thank-you card (lives inside the form, hidden until the message is sent) */
+  const thanks = document.createElement('div');
+  thanks.className = 'thanks';
+  thanks.tabIndex = -1;
+  thanks.innerHTML =
+    '<svg class="thanks__mark" viewBox="0 0 52 52" aria-hidden="true"><circle class="thanks__ring" cx="26" cy="26" r="23"/><path class="thanks__tick" d="M15 27l8 8 14-16"/></svg>' +
+    '<h3 class="thanks__title"></h3><p class="thanks__text"></p>' +
+    '<button class="btn btn--ghost" type="button">Send another message</button>';
+  form.append(thanks);
+
+  const showThanks = async (name, email) => {
+    $('.thanks__title', thanks).textContent = `Thanks, ${name.split(/\s+/)[0]}!`;
+    const text = $('.thanks__text', thanks);
+    const who = document.createElement('strong');
+    who.textContent = email;
+    text.textContent = "Message sent. I'll reply to ";
+    text.append(who, ' soon.');
+    form.classList.add('is-leaving');
+    await wait(380);
+    form.classList.add('is-done');
+    form.classList.remove('is-leaving');
+    await frame();
+    thanks.classList.add('is-in');
+    thanks.focus({ preventScroll: true });
+  };
+
+  $('button', thanks).addEventListener('click', async () => {
+    thanks.classList.remove('is-in');
+    await wait(300);
+    form.classList.add('is-entering');
+    form.classList.remove('is-done');
+    form.reset();
+    fields.forEach(clearInvalid);
+    setState('');
+    say('', '');
+    await frame();
+    form.classList.remove('is-entering');
+    form.elements['name'].focus({ preventScroll: true });
+  });
+
+  let busy = false;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = new FormData(form);
-    const name = String(data.get('name') || '').trim();
-    const email = String(data.get('email') || '').trim();
-    const message = String(data.get('message') || '').trim();
-
-    if (!name || !email || !message) return say('Fill in your name, email and message.', 'error');
-    if (!/^\S+@\S+\.\S+$/.test(email)) return say('Enter a valid email address, like name@example.com.', 'error');
-    if (form.action.includes('YOUR_FORM_ID')) {
-      return say('Sending is not set up yet. Add your Formspree form ID to the form in index.html.', 'error');
+    if (busy) return;
+    fields.forEach(clearInvalid);
+    const problems = check();
+    if (problems.length) {
+      problems.forEach(([n, t]) => setInvalid(n, t));
+      form.elements[problems[0][0]].focus();
+      return;
     }
 
-    send.disabled = true;
-    label.textContent = 'Sending...';
-    say('', 'ok');
+    busy = true;
+    const name = val('name');
+    const email = val('email');
+    form.style.minHeight = `${form.offsetHeight}px`;
+    form.classList.add('is-sending');
+    send.setAttribute('aria-busy', 'true');
+    say('', '');
+    setState('sending');
+
     try {
-      const res = await fetch(form.action, {
-        method: 'POST',
-        body: data,
-        headers: { Accept: 'application/json' },
-      });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      const [res] = await Promise.all([
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+          signal: ctrl.signal,
+        }).finally(() => clearTimeout(timer)),
+        wait(700),
+      ]);
       if (!res.ok) throw new Error('Request failed');
-      form.reset();
-      say('Message sent. I will reply to your email soon.', 'ok');
-      label.textContent = 'Sent';
-      setTimeout(() => { label.textContent = 'Send message'; }, 3000);
+      setState('done');
+      await wait(800);
+      await showThanks(name, email);
     } catch (err) {
-      say('The message did not send. Check your connection and try again', 'error');
-      label.textContent = 'Send message';
+      setState('error');
+      say("It didn't send. Check your connection and try again, or email me directly.", 'error');
+      await wait(2600);
+      setState('');
     } finally {
-      send.disabled = false;
+      busy = false;
+      send.removeAttribute('aria-busy');
+      form.classList.remove('is-sending');
     }
   });
 })();

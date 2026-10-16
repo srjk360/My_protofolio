@@ -338,3 +338,86 @@ h1, h2, h3, p { margin: 0; }
   .marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
   .progress { display: none; }
 }
+
+
+/* ============ Contact form feedback ============ */
+
+/* Button state layers, added by script.js over your existing button content */
+.form .btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn__state {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: .6rem;
+  border-radius: inherit; font-weight: 600; color: var(--ink);
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity .3s var(--ease), transform .45s var(--ease);
+}
+.btn__state--sending { background: var(--signal); }
+.btn__state--done { background: #8DF0C0; }
+.btn__state--error { background: #FF8FA3; }
+.btn[data-state="sending"] .btn__state--sending,
+.btn[data-state="done"] .btn__state--done,
+.btn[data-state="error"] .btn__state--error { opacity: 1; transform: none; }
+
+.spin {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2.5px solid rgba(15, 18, 38, .25); border-top-color: var(--ink);
+  animation: spin .7s linear infinite;
+}
+.tick { stroke-dasharray: 24; stroke-dashoffset: 0; }
+.btn[data-state="done"] .tick { animation: draw-btn .45s .15s var(--ease) both; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes draw-btn { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+
+/* Fields: lift and fade out one by one, and back in on "Send another message" */
+.form > .field, .form > .form__status { transition: opacity .38s var(--ease), transform .38s var(--ease); }
+.form > .btn { transition: opacity .38s var(--ease), transform .3s var(--ease), background .3s, color .3s, border-color .3s; }
+.form.is-sending > .field { opacity: .55; pointer-events: none; }
+.form.is-leaving > .field, .form.is-leaving > .btn, .form.is-leaving > .form__status { opacity: 0; transform: translateY(-12px); }
+.form.is-leaving > :nth-child(2) { transition-delay: .04s; }
+.form.is-leaving > :nth-child(3) { transition-delay: .08s; }
+.form.is-leaving > .btn { transition-delay: .12s; }
+.form.is-entering > .field, .form.is-entering > .btn, .form.is-entering > .form__status { opacity: 0; transform: translateY(14px); transition: none; }
+
+/* Field errors: red line, short message, one shake (the shake is done in script.js) */
+.field__error {
+  position: absolute; left: 0; top: calc(100% + 3px); margin: 0;
+  font-size: .8rem; line-height: 1.2; color: #FF8FA3; pointer-events: none;
+  opacity: 0; transform: translateY(-4px);
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+.field.is-invalid .field__error { opacity: 1; transform: none; }
+.field.is-invalid input, .field.is-invalid textarea { border-bottom-color: #FF8FA3; }
+.field.is-invalid::after { background: #FF8FA3; transform: scaleX(1); }
+
+/* Thank-you card */
+.thanks {
+  display: none; place-items: center; text-align: center; gap: .9rem;
+  padding: 2.2rem 1.5rem; border: 1px solid var(--line); border-radius: 20px;
+  background: var(--ink-2); outline: none;
+  opacity: 0; transform: translateY(14px) scale(.98);
+  transition: opacity .5s var(--ease), transform .6s var(--ease);
+}
+.form.is-done { align-content: center; }
+.form.is-done > .thanks { display: grid; }
+.thanks.is-in { opacity: 1; transform: none; }
+.thanks__mark { width: 76px; height: 76px; }
+.thanks__ring, .thanks__tick { fill: none; stroke: #8DF0C0; stroke-linecap: round; stroke-linejoin: round; }
+.thanks__ring { stroke-width: 2.5; stroke-dasharray: 145; stroke-dashoffset: 0; transform-origin: center; transform: rotate(-90deg); }
+.thanks__tick { stroke-width: 3; stroke-dasharray: 36; stroke-dashoffset: 0; }
+.thanks.is-in .thanks__mark { animation: pop .6s var(--ease) both; }
+.thanks.is-in .thanks__ring { animation: draw-ring .7s .1s var(--ease) both; }
+.thanks.is-in .thanks__tick { animation: draw-tick .45s .55s var(--ease) both; }
+@keyframes pop { from { transform: scale(.8); } to { transform: scale(1); } }
+@keyframes draw-ring { from { stroke-dashoffset: 145; } to { stroke-dashoffset: 0; } }
+@keyframes draw-tick { from { stroke-dashoffset: 36; } to { stroke-dashoffset: 0; } }
+.thanks__title { margin: 0; font: 600 clamp(1.5rem, 3vw, 2rem)/1.2 var(--display); letter-spacing: -.01em; }
+.thanks__text { margin: 0; color: var(--muted); max-width: 34ch; overflow-wrap: anywhere; }
+.thanks__text strong { color: var(--text); font-weight: 600; }
+.thanks > .thanks__title, .thanks > .thanks__text, .thanks > .btn {
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+.thanks.is-in > .thanks__title { opacity: 1; transform: none; transition-delay: .35s; }
+.thanks.is-in > .thanks__text { opacity: 1; transform: none; transition-delay: .45s; }
+.thanks.is-in > .btn { opacity: 1; transform: none; transition-delay: .55s; }
+.form .thanks .btn { justify-self: center; margin-top: .4rem; }
